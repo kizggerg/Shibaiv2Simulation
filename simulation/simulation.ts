@@ -40,10 +40,8 @@ export default class Simulation {
             const dailyPayAmount = dailyTotalVolume / this.currentNumberOfNFTs;
 
             wallets.forEach(wallet => wallet.payRewards(dailyPayAmount));
+            wallets.forEach(wallet => wallet.feedDogs());
             wallets.forEach(wallet => wallet.endDay());
-
-            // console.log(`DAY ${day}, #NFTs = ${this.currentNumberOfNFTs}`);
-            // wallets.forEach(wallet => wallet.printWallet());
         }
     }
 }

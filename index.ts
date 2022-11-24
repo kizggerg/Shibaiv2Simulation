@@ -1,3 +1,4 @@
+import TokenMarket from './simulation/models/tokenMarket';
 import Wallet from './simulation/models/wallet';
 import Simulation from './simulation/simulation';
 import { SIMULATION_DAYS } from './simulation/utils/variables'; 
@@ -17,7 +18,8 @@ import { SIMULATION_DAYS } from './simulation/utils/variables';
  * Can we show, tangiably, that if you bought this dog now, could you make this money?
  */
 function main() {
-    const codysWallet = new Wallet(100, 2);
+    const tokenMarket = new TokenMarket();
+    const codysWallet = new Wallet({ initialMoney: 100, initialNumberOfDogs: 2, market: tokenMarket });
     // ... other wallets
 
     const simulation = new Simulation();

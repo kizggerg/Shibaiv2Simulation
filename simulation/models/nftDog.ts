@@ -1,56 +1,60 @@
 import * as Variables from '../utils/variables';
+import BooleanCounter from '../utils/booleanCounter';
 import Wallet from './wallet';
 
 export default class NFTDog {
     currentMultipler = Variables.BASE_MULTIPLIER;
     trainPrice = Variables.TRAIN_PRICE;
 
-    stakingDaysPeriod = Variables.STAKING_DAYS;
-    stakingDaysCooldownPeriod = Variables.STAKING_DAYS_COOLDOWN;
-
-    isStaked = false;
+    stakedState: BooleanCounter;
+    aliveState: BooleanCounter;
     
     currentDaysStaked = 0;
     currentDaysUnstaked = 0;
 
+    constructor() {
+        this.stakedState = new BooleanCounter(true, Variables.STAKING_DAYS, Variables.STAKING_DAYS_COOLDOWN)
+        this.aliveState = new BooleanCounter(true, Variables.FEED_TIME_DAYS, Variables.FEED_TIME_COOLDOWN_DAYS);
+    }
+
+    get isStaked() {
+        return this.stakedState.state;
+    }
+
+    get isAlive() {
+        return this.aliveState.state;
+    }
+    
+    /**
+     * A dog will get "hungry" when it only has one more day left to be fed before it dies.
+     */
+    get isHungry() {
+        return this.aliveState.counter === 1;
+    }
+
     /**
      * Increases multiplier by increment
-     * @param {Wallet}} wallet 
+     * @param {Wallet} wallet 
      */
     train(wallet: Wallet) {
         wallet.purchase(this.trainPrice);
         this.currentMultipler += Variables.MULTIPLIER_INCREMENT;
     }
 
-    stake() {
-        this.isStaked = true;
-    }
+    /**
+     * Keeps the dog alive for a period of time
+     */
+    feed() {
+        if (!this.isAlive) {
+            throw new Error(`Cannot feed a dead dog: isAlive = ${this.isAlive}, counter = ${this.aliveState.counter}`);
+        }
 
-    unstake() {
-        this.isStaked = false;
+        this.aliveState.resetCounter();
+        // TODO:Then feed each dog in my wallet FEED_AMOUNT?
     }
 
     endDay() {
-        if (this.isStaked) {
-            this.currentDaysStaked++;
-        }
-
-        if (!this.isStaked) {
-            this.currentDaysUnstaked++;
-        }
-
-        if (this.currentDaysStaked >= Variables.STAKING_DAYS) {
-            this.resetStaked(false);
-        }
-
-        if (this.currentDaysUnstaked >= Variables.STAKING_DAYS_COOLDOWN) {
-            this.resetStaked(true);
-        }
-    }
-
-    resetStaked(newIsStaked: boolean) {
-        this.currentDaysStaked = 0;
-        this.currentDaysUnstaked = 0;
-        this.isStaked = newIsStaked;
+        this.aliveState.cycle();
+        this.stakedState.cycle();
     }
 }
